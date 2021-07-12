@@ -2,12 +2,11 @@ const serializeError = require('serialize-error');
 const path = require('path');
 
 async function handler(event, context, callback) {
-  const { ClientContext, FunctionName, InvocationType, LogType, Payload } = event.body;
+  const { ClientContext } = event.body;
 
   const [targetHandlerFile, targetHandlerFunction] = event.targetHandler.split(".");
   const target = require(path.resolve(__dirname, '../..', event.location, targetHandlerFile));
 
-  const targetEvent = JSON.parse(Payload);
   const targetContext = {
     ...context,
   };
