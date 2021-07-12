@@ -1,7 +1,7 @@
 'use strict';
 
 const packagePath = 'node_modules/serverless-offline-direct-lambda';
-const handlerPath = `proxy.js`;
+const handlerPath = 'proxy.js';
 
 var AWS_SDK_USED = process.env.AWS_SDK_USED || 'rails';
 function AWS_SDK_METHOD(functionBeingProxied, location) {
@@ -74,8 +74,11 @@ class ServerlessPlugin {
     this.serverless = serverless;
     this.options = options;
 
+    const boundStartHandler = this.startHandler.bind(this);
+
     this.hooks = {
-      "before:offline:start:init": this.startHandler.bind(this),
+      'before:offline:start': boundStartHandler,
+      'before:offline:start:init': boundStartHandler,
     };
   }
 
@@ -85,6 +88,8 @@ class ServerlessPlugin {
       location = this.serverless.service.custom['serverless-offline'].location;
       this.serverless.service.custom['serverless-offline'].location = '';
     } catch (_) { }
+
+    location = `${this.serverless.config.servicePath}/${location}`;
 
     this.serverless.cli.log('Running Serverless Offline with direct lambda support');
 
@@ -98,7 +103,7 @@ const addProxies = (functionsObject, location) => {
     // filter out functions with event config,
     // leaving just those intended for direct lambda-to-lambda invocation
     const functionObject = functionsObject[fn];
-    if (!functionObject.events || functionObject.events.length === 0) {
+    if (!functionObject.events || !functionObject.events.some((event) => Object.keys(event)[0] === 'http')) {
       const pf = functionProxy(functionObject, location);
       functionsObject[pf.name] = pf;
     }
